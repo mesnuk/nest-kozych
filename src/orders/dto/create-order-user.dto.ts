@@ -1,0 +1,282 @@
+import {OrderTypesEnum} from '../types/order.types';
+import {ApiProperty, ApiPropertyOptional} from '@nestjs/swagger';
+import {
+    IsArray, IsBoolean,
+    IsEnum,
+    IsNotEmpty,
+    IsNumber, IsNumberString,
+    IsObject,
+    IsOptional,
+    IsString, Matches,
+    Min,
+    ValidateNested
+} from 'class-validator';
+import {Type} from 'class-transformer';
+
+export class CreateOrderGoodsDto {
+    @ApiProperty({
+        example: 1,
+        type: 'number',
+        required: true
+    })
+    @IsNumber()
+    id: number;
+
+    @ApiProperty({
+        example: 1,
+        type: 'number',
+        required: true
+    })
+    @IsNumber()
+    @Min(1)
+    count: number;
+}
+
+export class CreateOrderUserDto {
+    @ApiProperty({
+        example: [{
+            id: 1,
+            count: 1
+        }],
+        type: 'array',
+        required: true
+    })
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => CreateOrderGoodsDto)
+    @IsNotEmpty()
+    goods: Array<{
+        id: number;
+        count: number;
+    }>;
+
+    @ApiProperty({
+        example: 'John',
+        type: 'string',
+        required: true
+    })
+    @IsString()
+    @IsNotEmpty()
+    contact_name: string;
+
+    @ApiProperty({
+        example: 'Doe',
+        type: 'string',
+        required: true
+    })
+    @IsString()
+    @IsNotEmpty()
+    contact_surname: string;
+
+    @ApiProperty({
+        example: '+380123456789',
+        type: 'string',
+        required: true,
+        pattern: '/^\+380\d{3}\d{2}\d{2}\d{2}$/'
+    })
+    @IsString()
+    @Matches(/^\+380\d{3}\d{2}\d{2}\d{2}$/, { message: 'Phone number is not valid' })
+    @IsNotEmpty()
+    contact_phone: string;
+
+    @ApiProperty({
+        example: 'test@test.com',
+        type: 'string',
+        required: true
+    })
+    @IsString()
+    @IsNotEmpty()
+    contact_email: string;
+
+
+    @ApiProperty({
+        example: OrderTypesEnum.novaPostWarehouse,
+        type: 'string',
+        required: true,
+        enum: OrderTypesEnum
+    })
+    @IsString()
+    @IsNotEmpty()
+    @IsEnum(OrderTypesEnum)
+    delivery_type: OrderTypesEnum;
+
+    @ApiPropertyOptional({
+        example: {},
+        type: {
+            areaRef: {example: 'dcaad5a7-4b33-11e4-ab6d-005056801329', type: 'string', required: true},
+            cityRef: {example: '0df7201a-4b3a-11e4-ab6d-005056801329', type: 'string', required: true},
+            warehouseRef: {example: '93c88fd5-116f-11ea-9295-005056b24375', type: 'string', required: false,},
+            streetRef: {example: '00000000-0000-0000-0000-000000000000', type: 'string', required: false},
+            buildingNumber: {example: '24', type: 'string', required: false},
+            floorNumber: {example: '5', type: 'string', required: false},
+            apartmentNumber: {example: '230', type: 'string', required: false},
+            isHeavyElevator: {example: false, type: 'boolean', required: false},
+            isDeliveryToFloor: {example: false, type: 'boolean', required: false}
+        },
+        required: true
+    })
+    @IsObject()
+    @Type((params) => {
+        if (params.object.delivery_type === OrderTypesEnum.novaPostWarehouse){
+            return DeliveryDataNovaPostWarehouseDto
+        }else if (params.object.delivery_type === OrderTypesEnum.novaPostAddress){
+            return DeliveryDataNovaPostAddressDto
+        }
+    })
+    @ValidateNested()
+    delivery_data: DeliveryDataNovaPostAddressDto | DeliveryDataNovaPostWarehouseDto;
+
+    @ApiProperty({
+        example: 'John',
+        type: 'string',
+        required: false,
+    })
+    @IsString()
+    @IsOptional()
+    @IsNotEmpty()
+    recipient_name: string;
+
+    @ApiProperty({
+        example: 'Doe',
+        type: 'string',
+        required: false
+    })
+    @IsString()
+    @IsOptional()
+    @IsNotEmpty()
+    recipient_surname: string;
+
+    @ApiProperty({
+        example: '+380123456789',
+        type: 'string',
+        required: false,
+        pattern: '/^\+380\d{3}\d{2}\d{2}\d{2}$/'
+    })
+    @IsString()
+    @IsOptional()
+    @Matches(/^\+380\d{3}\d{2}\d{2}\d{2}$/, { message: 'Phone number is not valid' })
+    @IsNotEmpty()
+    recipient_phone: string;
+
+    @ApiProperty({
+        example: false,
+        type: 'boolean',
+        required: false
+    })
+    @IsBoolean()
+    @IsOptional()
+    useCashBack: boolean;
+}
+
+export class DeliveryDataNovaPostWarehouseDto {
+    @ApiProperty({
+        example: '00000000-0000-0000-0000-000000000000',
+        type: 'string',
+        required: true,
+        description: 'Area ref'
+    })
+    @IsString()
+    @IsNotEmpty()
+    areaRef: string;
+
+    @ApiProperty({
+        example: '00000000-0000-0000-0000-000000000000',
+        type: 'string',
+        required: true,
+        description: 'City ref'
+    })
+    @IsString()
+    @IsNotEmpty()
+    cityRef: string;
+
+    @ApiProperty({
+        example: '00000000-0000-0000-0000-000000000000',
+        type: 'string',
+        required: true
+    })
+    @IsString()
+    @IsNotEmpty()
+    warehouseRef: string;
+}
+
+
+export class DeliveryDataNovaPostAddressDto {
+    @ApiProperty({
+        example: '00000000-0000-0000-0000-000000000000',
+        type: 'string',
+        required: true,
+        description: 'Area ref'
+    })
+    @IsString()
+    @IsNotEmpty()
+    areaRef: string;
+
+    @ApiProperty({
+        example: '00000000-0000-0000-0000-000000000000',
+        type: 'string',
+        required: true,
+        description: 'City ref'
+    })
+    @IsString()
+    @IsNotEmpty()
+    cityRef: string;
+
+    @ApiProperty({
+        example: '00000000-0000-0000-0000-000000000000',
+        type: 'string',
+        required: true
+    })
+    @IsString()
+    @IsNotEmpty()
+    streetRef: string;
+
+    @ApiProperty({
+        example: '24',
+        type: 'string',
+        required: true
+    })
+    @IsString()
+    @IsNumberString()
+    @IsNotEmpty()
+    buildingNumber: string;
+
+    @ApiProperty({
+        example: '5',
+        type: 'string',
+        required: false
+    })
+    @IsString()
+    @IsOptional()
+    @IsNumberString()
+    @IsNotEmpty()
+    floorNumber: string = '';
+
+    @ApiProperty({
+        example: '230',
+        type: 'string',
+        required: false
+    })
+    @IsString()
+    @IsOptional()
+    @IsNumberString()
+    @IsNotEmpty()
+    apartmentNumber: string = '';
+
+    @ApiProperty({
+        example: false,
+        type: 'boolean',
+        required: false
+    })
+    @IsBoolean()
+    @IsOptional()
+    isHeavyElevator: boolean = false;
+
+    @ApiProperty({
+        example: false,
+        type: 'boolean',
+        required: false
+    })
+    @IsBoolean()
+    @IsOptional()
+    isDeliveryToFloor: boolean = false;
+}
